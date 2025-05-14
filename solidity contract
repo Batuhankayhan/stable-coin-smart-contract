@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// Import OpenZeppelin contracts for security and standard compliance
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -21,9 +20,6 @@ contract AdvancedStableCoin is ERC20, Pausable, AccessControl {
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
-    /**
-     * @dev Constructor sets the token name and symbol and grants roles to deployer.
-     */
     constructor(string memory name, string memory symbol) ERC20(name, symbol) {
         // Grant all roles to deployer
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -63,19 +59,10 @@ contract AdvancedStableCoin is ERC20, Pausable, AccessControl {
         _pause();
     }
 
-    /**
-     * @dev Unpause token transfers.
-     * Requirements:
-     * - Caller must have PAUSER_ROLE.
-     */
     function unpause() external onlyRole(PAUSER_ROLE) {
         _unpause();
     }
 
-    /**
-     * @dev Override _beforeTokenTransfer hook from ERC20 and Pausable.
-     * Prevent transfers while paused.
-     */
     function _beforeTokenTransfer(address from, address to, uint256 amount)
         internal
         override
