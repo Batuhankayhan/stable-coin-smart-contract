@@ -1,0 +1,87 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+// Import OpenZeppelin contracts for security and standard compliance
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
+/**
+ * @title AdvancedStableCoin
+ * @dev ERC20 stablecoin with minting, burning, pausing, and role-based access control.
+ * Roles:
+ * - DEFAULT_ADMIN_ROLE: full control (usually deployer)
+ * - MINTER_ROLE: allowed to mint tokens
+ * - BURNER_ROLE: allowed to burn tokens
+ * - PAUSER_ROLE: allowed to pause/unpause transfers
+ */
+contract AdvancedStableCoin is ERC20, Pausable, AccessControl {
+    // Define roles using keccak256 hashes
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+
+    /**
+     * @dev Constructor sets the token name and symbol and grants roles to deployer.
+     */
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) {
+        // Grant all roles to deployer
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(MINTER_ROLE, msg.sender);
+        _setupRole(BURNER_ROLE, msg.sender);
+        _setupRole(PAUSER_ROLE, msg.sender);
+    }
+
+    /**
+     * @dev Mint new tokens to an account.
+     * Requirements:
+     * - Caller must have MINTER_ROLE.
+     * @param to Address to mint tokens to.
+     * @param amount Amount of tokens to mint (in smallest unit).
+     */
+    function mint(address to, uint256 amount) external onlyRole(MINTER_ROLE) {
+        _mint(to, amount);
+    }
+
+    /**
+     * @dev Burn tokens from an account.
+     * Requirements:
+     * - Caller must have BURNER_ROLE.
+     * @param from Address to burn tokens from.
+     * @param amount Amount of tokens to burn.
+     */
+    function burn(address from, uint256 amount) external onlyRole(BURNER_ROLE) {
+        _burn(from, amount);
+    }
+
+    /**
+     * @dev Pause all token transfers.
+     * Requirements:
+     * - Caller must have PAUSER_ROLE.
+     */
+    function pause() external onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+
+    /**
+     * @dev Unpause token transfers.
+     * Requirements:
+     * - Caller must have PAUSER_ROLE.
+     */
+    function unpause() external onlyRole(PAUSER_ROLE) {
+        _unpause();
+    }
+
+    /**
+     * @dev Override _beforeTokenTransfer hook from ERC20 and Pausable.
+     * Prevent transfers while paused.
+     */
+    function _beforeTokenTransfer(address from, address to, uint256 amount)
+        internal
+        override
+    {
+        super._beforeTokenTransfer(from, to, amount);
+
+        require(!paused(), "AdvancedStableCoin: token transfer while paused");
+    }
+}
